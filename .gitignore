@@ -20,3 +20,6 @@ Thumbs.db
 
 # Obsidian
 data.json
+
+# Prepared release artifacts
+dist/

@@ -1,249 +1,113 @@
 # AI Context Sync for Obsidian
 
-[![GitHub release](https://img.shields.io/github/v/release/mctatge/obsidian-ai-context-sync)](https://github.com/mctatge/obsidian-ai-context-sync/releases)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+Sync one Obsidian note into marked sections in your coding assistants' project instructions, while preserving the text around those sections.
 
-**One source of truth for all your AI coding assistants.**
+**Experimental desktop plugin · MIT · 1.1.0**
 
-Tired of maintaining separate context files for Claude, Cursor, GitHub Copilot, and other AI tools? This Obsidian plugin lets you write your project context once and sync it everywhere.
+This is a small local export tool. It does not call an AI service, share your vault, or refresh an assistant's existing conversation. You choose the note, project directories, and destinations. Start a fresh assistant session when its instruction loader requires it.
 
-![AI Context Sync Demo](./assets/demo.gif)
+## Supported output formats
 
-## The Problem
+| Target | File | Behavior |
+| --- | --- | --- |
+| Claude Code | `CLAUDE.md` | Append or update one managed section |
+| Codex / AGENTS.md | `AGENTS.md` | Append or update one managed section |
+| GitHub Copilot | `.github/copilot-instructions.md` | Append or update one managed section |
+| Cursor Agent | `.cursor/rules/ai-context-sync.mdc` | Create a dedicated always-on rule; refuse an existing unowned rule |
 
-Modern AI coding assistants use different context files:
-- **Claude Code** → `CLAUDE.md`
-- **Cursor** → `.cursor/rules/*.md` (works with GPT, Claude, Gemini, DeepSeek, etc.)
-- **GitHub Copilot** → `.github/copilot-instructions.md`
-- **Windsurf/Codeium** → `.windsurfrules`
-- **Continue.dev** → `.continuerules`
-- **Sourcegraph Cody** → `.cody/instructions.md`
-- **OpenAI Codex CLI** → `AGENTS.md`
-- **DeepSeek Coder** → `DEEPSEEK.md`
-- **Google Gemini** → `.gemini/context.md`
-- **Amazon Q** → `.amazonq/rules.md`
-- **Zed AI** → `.zed/assistant/context.md`
-- **Aider** → `.aider.conf.yml`
-- **ChatGPT** → Manual memory export
-- **AGENTS.md** → Universal standard (emerging)
+These filenames follow the documented [Claude Code](https://code.claude.com/docs/en/memory), [Codex](https://developers.openai.com/codex/guides/agents-md/), [Copilot](https://code.visualstudio.com/docs/copilot/customization/custom-instructions), and [Cursor](https://cursor.com/docs/rules) file contracts. Automated tests check the output and sync behavior; fresh native assistant sessions have **not** been tested with this release. File creation alone does not prove a client loaded the context. Other assistants and Obsidian mobile are outside this release's scope.
 
-When you work primarily with one tool (like Claude) but occasionally switch to others (like Cursor with GPT), your carefully crafted context doesn't transfer. You end up maintaining multiple files or getting subpar assistance.
+## Install
 
-## The Solution
+This plugin is not published in Obsidian Community Plugins. Use a local build or an attached GitHub release asset. No installer changes your vault automatically.
 
-Write your AI context once in Obsidian, sync to all your tools automatically.
+### Build from source
 
-```
-                    ┌─────────────────────┐
-                    │   Obsidian Note     │
-                    │   "AI Context.md"   │
-                    └─────────┬───────────┘
-                              │
-                              ▼
-                        ┌───────────┐
-                        │ AI Context│
-                        │   Sync    │
-                        └─────┬─────┘
-                              │
-       ┌──────────┬───────────┼───────────┬──────────┐
-       ▼          ▼           ▼           ▼          ▼
-   ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐
-   │CLAUDE  │ │AGENTS  │ │.cursor/│ │.windsurf│ │.github/│
-   │.md     │ │.md     │ │rules/  │ │rules    │ │copilot │
-   └────────┘ └────────┘ └────────┘ └────────┘ └────────┘
-       │          │           │           │          │
-       ▼          ▼           ▼           ▼          ▼
-    Claude    DeepSeek     Cursor      Windsurf   Copilot
-              Codex CLI   (any model)  Codeium
-              Gemini
-              ChatGPT*
-```
-*ChatGPT export is for manual copy/paste into memory
+Requires desktop Obsidian, Node.js 20 or later, npm, and Git. Python 3 is needed only for optional release packaging.
 
-## Features
-
-- 🔄 **Auto-sync** - Syncs automatically when you save your source note
-- 🎯 **Multi-target** - Sync to Claude, Cursor, Copilot, AGENTS.md, and more
-- 📁 **Multi-project** - Sync to multiple project directories at once
-- 📝 **Templates** - Customizable output templates per target
-- ⚡ **Commands** - Quick commands for manual sync and configuration
-- 📊 **Status bar** - See sync status at a glance
-
-## Installation
-
-### From Obsidian Community Plugins (Recommended)
-
-1. Open Obsidian Settings
-2. Go to Community Plugins → Browse
-3. Search for "AI Context Sync"
-4. Click Install, then Enable
-
-### Manual Installation
-
-1. Download the latest release from [GitHub Releases](https://github.com/mctatge/obsidian-ai-context-sync/releases)
-2. Extract to your vault's `.obsidian/plugins/ai-context-sync/` folder
-3. Reload Obsidian
-4. Enable the plugin in Settings → Community Plugins
-
-### From Source
-
-```bash
+```sh
 git clone https://github.com/mctatge/obsidian-ai-context-sync.git
 cd obsidian-ai-context-sync
-npm install
-npm run build
+npm ci
+npm run check
 ```
 
-Copy `main.js`, `manifest.json`, and `styles.css` to your vault's `.obsidian/plugins/ai-context-sync/` folder.
+1. Create `<your-vault>/.obsidian/plugins/ai-context-sync/`.
+2. Copy `main.js`, `manifest.json`, and `styles.css` from the checkout into that directory. Keep your own vault path private.
+3. Reload Obsidian. In **Settings → Community plugins**, enable **AI Context Sync**. Follow Obsidian's prompt if third-party plugins are disabled.
 
-## Quick Start
+### From a GitHub release
 
-1. **Create your context note** - Use the command `AI Context Sync: Create AI context template note` to get started with a template, or use any existing note
+For a [release](https://github.com/mctatge/obsidian-ai-context-sync/releases) with attached runtime assets, download `ai-context-sync-1.1.0.zip` and extract its `ai-context-sync` folder into your vault's `.obsidian/plugins/` directory. Alternatively, download its three runtime files individually. If a release has no attached runtime assets, use the source-build instructions above. Do not install GitHub's automatic source archive as a built plugin.
 
-2. **Set as source** - Open your context note and run `AI Context Sync: Set current note as AI context source`
+## First sync
 
-3. **Add project paths** - Run `AI Context Sync: Add project path` to add your project directories
+Use a disposable project first. Enabling the plugin does not start syncing: all targets and auto-sync start off.
 
-4. **Sync!** - Click the sync icon in the ribbon or run `AI Context Sync: Sync AI context to all targets`
+1. Write a context note, or use **AI Context Sync: Create AI context template note**.
+2. Open it and run **AI Context Sync: Set current note as AI context source**.
+3. In plugin settings, add an **existing absolute project directory** and enable the targets you use. `~` is not expanded. No implicit vault-root destination is selected.
+4. Click **Preview** to validate the complete destination list without writing files.
+5. Click **Sync now**. Inspect the generated sections and confirm the surrounding instructions remain intact.
+6. Open a fresh assistant session and use its instruction/context diagnostics to check that it loaded the file. Test again after changing the source note.
+7. Optionally enable **Auto-sync on save**. It applies to future source edits, debounces for 500 ms, and takes effect without reloading the plugin. Turning it off cancels pending automatic writes.
 
-## Configuration
+The ribbon button and **Sync AI context to enabled targets** command perform a manual sync. **Sync AI context to one enabled target** limits a manual sync to one target across the configured projects.
 
-### Settings
+## How existing instructions are preserved
 
-| Setting | Description |
-|---------|-------------|
-| Source note | The Obsidian note containing your AI context |
-| Auto-sync on save | Automatically sync when source note is modified |
-| Show status bar | Display sync status in Obsidian's status bar |
-| Include timestamp | Add timestamp comments to synced files |
-| Custom header | Header comment added to all synced files |
-
-### Sync Targets
-
-Enable/disable specific targets in settings:
-
-| Target | Output Path | Description |
-|--------|-------------|-------------|
-| Claude Code | `CLAUDE.md` | Claude Code's context file |
-| AGENTS.md | `AGENTS.md` | Universal standard (Codex, DeepSeek, etc.) |
-| Cursor Rules | `.cursor/rules/ai-context.md` | Works with ALL Cursor models |
-| GitHub Copilot | `.github/copilot-instructions.md` | Copilot custom instructions |
-| Windsurf | `.windsurfrules` | Windsurf/Codeium rules |
-| Continue.dev | `.continuerules` | Continue for VS Code/JetBrains |
-| Sourcegraph Cody | `.cody/instructions.md` | Cody context instructions |
-| OpenAI Codex CLI | `AGENTS.md` | Codex CLI reads AGENTS.md |
-| ChatGPT | `.chatgpt/project-context.md` | Export for manual memory |
-| DeepSeek Coder | `DEEPSEEK.md` | DeepSeek context file |
-| Google Gemini | `.gemini/context.md` | Gemini/AI Studio context |
-| Amazon Q | `.amazonq/rules.md` | Amazon Q Developer rules |
-| Zed AI | `.zed/assistant/context.md` | Zed editor AI assistant |
-| Aider | `.aider.conf.yml` | Aider configuration |
-
-### Project Paths
-
-Add multiple project directories to sync your context to all your codebases:
-
-- `/Users/you/projects/my-app`
-- `/Users/you/projects/another-project`
-- `/Users/you/work/client-project`
-
-## Commands
-
-| Command | Description |
-|---------|-------------|
-| Sync AI context to all targets | Sync to all enabled targets |
-| Sync AI context to specific target | Choose a specific target to sync |
-| Set current note as AI context source | Set the open note as the source |
-| Add project path | Add a project directory for syncing |
-| Create AI context template note | Create a starter template |
-
-## Template Variables
-
-Use these variables in custom templates:
-
-| Variable | Description |
-|----------|-------------|
-| `{{CONTENT}}` | The content of your source note |
-| `{{HEADER}}` | The configured header comment |
-| `{{TIMESTAMP}}` | Current ISO timestamp |
-| `{{SOURCE}}` | Path to the source note |
-
-## Example Context Note
+Given a manually authored `CLAUDE.md`, a sync appends this section:
 
 ```markdown
-# AI Context
+# My existing project instructions
+Keep these instructions.
 
-## Project Overview
-A React + TypeScript web application for task management.
+<!-- ai-context-sync:begin -->
+<!-- Context generated by AI Context Sync. Edit the Obsidian source note. -->
 
-## Tech Stack
-- Frontend: React 18, TypeScript, TailwindCSS
-- Backend: Node.js, Express, PostgreSQL
-- Testing: Vitest, Playwright
-
-## Coding Conventions
-- Use functional components with hooks
-- Prefer named exports
-- Use `const` by default, `let` only when reassignment is needed
-- Error handling: Always use try/catch with proper error types
-
-## File Organization
-- `src/components/` - React components
-- `src/hooks/` - Custom hooks
-- `src/utils/` - Utility functions
-- `src/types/` - TypeScript type definitions
-
-## Important Patterns
-- State management via Zustand
-- API calls through custom `useQuery` hook
-- Form handling with React Hook Form + Zod
-
-## Things to Avoid
-- Don't use `any` type
-- Don't use default exports (except for pages)
-- Don't mutate state directly
+The contents of the selected Obsidian note.
+<!-- ai-context-sync:end -->
 ```
 
-## Why Obsidian?
+Later syncs replace only the text between those marker lines, including the generated header. Text before and after the section stays unchanged. Edit the source note to change generated context; edit outside the markers for project-specific instructions. Malformed, duplicated, or embedded markers stop the sync rather than guessing what to replace. Source notes and headers cannot contain the reserved marker strings.
 
-Obsidian is the perfect home for AI context because:
+Cursor uses a dedicated `.mdc` rule with valid frontmatter and `alwaysApply: true`. An existing file at that exact path must have the plugin's header and markers; otherwise syncing stops. Other manual rules are left alone.
 
-1. **Already in your workflow** - If you use Obsidian for notes, your context is always accessible
-2. **Markdown native** - Perfect format for AI context files
-3. **Linking** - Link your context to other notes, documentation, decisions
-4. **Version history** - Track changes to your context over time
-5. **Cross-platform** - Access and edit from any device
+The optional header supports `{{SOURCE}}` and `{{TIMESTAMP}}`. Inserted source text is literal: dollar signs and template-looking text inside the note are not substituted. Timestamps are off by default so identical content does not create needless changes.
 
-## Roadmap
+## Destination and concurrency safeguards
 
-- [ ] Import existing CLAUDE.md/AGENTS.md back into Obsidian
-- [ ] Template library for common project types
-- [ ] Git integration (auto-commit synced files)
-- [ ] Selective section sync (sync only parts of a note)
-- [ ] VS Code extension companion
+- Project directories must already exist. A missing or mistyped root fails; required integration subdirectories are created only after validation.
+- Symlink destinations and symlink parent directories inside a project are refused, including an `AGENTS.md` symlink to `CLAUDE.md`. Hard-linked destination files are also refused. Disable the conflicting target or resolve its layout manually; the plugin does not alter those links.
+- Duplicate physical destinations, including aliases of one project directory, fail before any file is written. A source note cannot also be a destination.
+- Targets have fixed paths. Old/custom output paths are not accepted from saved settings.
+- Source reads and writes run through one ordered queue within the plugin. Files changed after planning are refused. Disabling auto-sync or unloading the plugin prevents queued automatic writes.
+- Each changed file is replaced atomically. Existing regular-file permissions are preserved; new files are owner-readable/writable. A group of files is **not** one transaction: an I/O failure can leave earlier files updated. Review destinations and rerun after fixing the error.
 
-## Contributing
+Use a project directory you control. These checks are not an isolation boundary against another process changing filesystem paths at the same instant. Atomic replacement can change filesystem metadata such as extended attributes; store special filesystem metadata outside generated instruction files if you need to preserve it.
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+## Upgrading from 1.0.0
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+Auto-sync is reset to **off** on upgrade. The source note and project directories are retained, and matching supported target selections are retained. The duplicate legacy Codex target becomes the single AGENTS target. Unsupported presets and custom per-target templates are removed from settings; existing exported files are never deleted or migrated automatically.
+
+Version 1.0.0 did not use ownership markers. The plugin cannot identify which parts of an old export are yours. Review those files and remove obsolete generated text yourself before syncing. The old `.cursor/rules/ai-context.md` file is left untouched; the corrected rule uses `ai-context-sync.mdc`.
+
+Disabling a target, removing a project, or uninstalling the plugin leaves generated sections in place. Remove a section from its begin marker through its end marker manually if you no longer want that context.
+
+## Validation and contributing
+
+```sh
+npm ci
+npm run check
+npm run release:prepare
+```
+
+`npm run check` runs regression tests, TypeScript checking, the production build, and a bundle syntax check. Tests use disposable temporary projects/vaults and a mocked Obsidian API. They cover instruction preservation, literal rendering, linked/duplicate destinations, changed-file refusal, live toggles, cancellation, and delayed reads. CI runs the same checks on Linux. No real vault or assistant configuration is used.
+
+`release:prepare` additionally writes a ZIP, the three runtime files, and SHA-256 checksums under ignored `dist/`. It does not tag, upload, or publish anything.
+
+Native Obsidian installation/UI behavior and fresh assistant ingestion still require a manual acceptance pass. If you report an issue, include plugin/Obsidian versions, the target, expected behavior, and a minimal disposable reproduction. Do not attach your private context note or credentials. Keep changes focused and add regression coverage for behavior you change.
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) for details.
-
-## Acknowledgments
-
-- Inspired by the fragmentation of AI context files across different tools
-- Built with the [Obsidian Plugin API](https://docs.obsidian.md/Plugins/Getting+started/Build+a+plugin)
-- Thanks to the Obsidian community for plugin development resources
-
----
-
-**Built by [Mitch Tatge](https://github.com/mctatge).**
-
-**Found this useful?** Give it a ⭐ on [GitHub](https://github.com/mctatge/obsidian-ai-context-sync)!
+[MIT](LICENSE). Built by [Mitch Tatge](https://github.com/mctatge).

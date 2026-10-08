@@ -1,12 +1,16 @@
 {
 	"name": "obsidian-ai-context-sync",
-	"version": "1.0.0",
-	"description": "Obsidian plugin to sync AI context across Claude, Cursor, and other AI coding assistants",
+	"version": "1.1.0",
+	"description": "Desktop Obsidian plugin that preserves manual instructions while syncing marked context sections.",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
-		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
-		"version": "node version-bump.mjs && git add manifest.json versions.json"
+		"typecheck": "tsc --noEmit --skipLibCheck",
+		"test": "node scripts/run-tests.mjs",
+		"build": "npm run typecheck && node esbuild.config.mjs production",
+		"check": "npm run typecheck && npm run test && node --check main.js",
+		"release:prepare": "npm run check && python3 scripts/package-release.py",
+		"version": "node version-bump.mjs"
 	},
 	"keywords": [
 		"obsidian",
@@ -25,12 +29,15 @@
 		"@types/node": "^20.11.0",
 		"builtin-modules": "^3.3.0",
 		"esbuild": "^0.20.0",
-		"obsidian": "latest",
+		"obsidian": "1.13.1",
 		"tslib": "^2.6.2",
 		"typescript": "^5.3.3"
 	},
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/mctatge/obsidian-ai-context-sync.git"
+	},
+	"engines": {
+		"node": ">=20"
 	}
 }
